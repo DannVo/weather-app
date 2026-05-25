@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; background-color: #f0f4f8;
+            font-family: 'Kalam', cursive;
+        }
+        .app-container {
+            width: 850px; height: 550px;
+            display: flex; border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            overflow: hidden; background-color: #ffffff;
+            border: 2px solid #e0e0e0;
+        }
+        /* LEFT PANEL */
+        .left-panel {
+            width: 38%; background-color: #ffffff;
+            padding: 30px 20px; display: flex; flex-direction: column;
+            align-items: center; border-right: 2px solid #f0f0f0;
+            position: relative;
+        }
+        .search-form { width: 100%; margin-bottom: 25px; }
+        .search-bar {
+            width: 100%; display: flex; align-items: center;
+            border: 2px solid #e0e0e0; border-radius: 12px;
+            padding: 5px 15px; background-color: #fdfdfd;
+            transition: border-color 0.3s;
+        }
+        .search-bar:focus-within { border-color: #8be3df; }
+        .search-bar button {
+            background: none; border: none; font-size: 18px; color: #555;
+            margin-right: 5px; cursor: pointer; padding: 0;
+        }
+        .search-bar input {
+            border: none; outline: none; width: 100%;
+            font-family: 'Kalam', cursive; font-size: 18px;
+            color: #333; background: transparent;
+        }
+        .search-bar input::placeholder { color: #ccc; }
+        
+        .location-badge {
+            background-color: #8be3df; border: 2px solid #000;
+            border-radius: 12px; padding: 6px 25px;
+            font-size: 24px; font-weight: 700; margin-bottom: 15px;
+            color: #000; letter-spacing: 1px; text-transform: uppercase;
+            box-shadow: 2px 2px 0px #000;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .weather-icon-container {
+            width: 160px; height: 160px; display: flex;
+            justify-content: center; align-items: center; margin-bottom: 15px;
+        }
+        .main-weather-img {
+            width: 140px; height: 140px; object-fit: contain;
+            animation: float 4s ease-in-out infinite;
+            filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.1));
+        }
+
+        .temp-badge {
+            border: 2px solid #000; border-radius: 12px; padding: 2px 20px;
+            font-size: 32px; font-weight: 700; background-color: #fff;
+            margin-bottom: 15px; box-shadow: 2px 2px 0px #000;
+        }
+        .time-badge {
+            border: 2px solid #000; border-radius: 15px; padding: 5px 25px;
+            font-size: 18px; font-weight: 700; background-color: #fff;
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        /* RIGHT PANEL */
+        .right-panel {
+            width: 62%; background-color: #e8eaee;
+            padding: 30px 40px; display: flex; flex-direction: column;
+        }
+        .tabs { display: flex; gap: 30px; margin-bottom: 20px; }
+        .tab { font-size: 28px; color: #999; cursor: pointer; transition: all 0.3s; font-weight: 700; }
+        .tab:hover { color: #555; }
+        .tab.active {
+            color: #000; text-decoration: underline;
+            text-decoration-thickness: 3px; text-underline-offset: 5px;
+        }
+        
+        .view { display: none; flex-direction: column; flex-grow: 1; animation: fadeIn 0.4s ease-in-out; }
+        .view.active-view { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* TODAY VIEW */
+        .weather-details { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .detail-badge {
+            border: 2px solid #000; border-radius: 10px; padding: 5px 15px;
+            background-color: #fff; font-size: 16px; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 10px; width: fit-content;
+            box-shadow: 2px 2px 0px #000;
+        }
+        .grid-2x2 {
+            display: grid; grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr; gap: 15px; flex-grow: 1;
+        }
+        .card { background-color: #ffffff; border-radius: 20px; width: 100%; height: 100%; }
+        
+        .detail-card {
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; padding: 10px; border: 2px solid transparent;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .detail-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .detail-img-icon { width: 45px; height: 45px; object-fit: contain; margin-bottom: 5px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .detail-emoji-icon { font-size: 35px; margin-bottom: 5px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .detail-title { font-size: 16px; color: #777; font-weight: bold; }
+        .detail-value { font-size: 22px; font-weight: 700; color: #000; }
+
+        /* WEEK VIEW */
+        .grid-4x2 {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 15px; flex-grow: 1; margin-top: 10px;
+        }
+        .week-card {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 10px 5px; border: 2px solid transparent; height: 130px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s;
+        }
+        .week-card:hover {
+            transform: translateY(-3px);
+            border: 2px solid #8be3df;
+        }
+        .week-day { font-weight: 700; font-size: 18px; color: #000; }
+        .week-date { font-size: 14px; color: #888; margin-bottom: 5px; }
+        .week-img-icon { width: 40px; height: 40px; object-fit: contain; margin-bottom: 5px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1)); }
+        .week-temp { font-size: 15px; font-weight: bold; color: #333; }
+        .grid-4x2 .empty { background: transparent; border: none; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    {% if location and today %}
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+        <form action="/" method="POST" class="search-form">
+            <div class="search-bar">
+                <button type="submit">&#128269;</button>
+                <input type="text" name="search_query" placeholder="Search for places..." required />
+            </div>
+        </form>
+        
+        <div class="location-badge">{{ location.name }}</div>
+        
+        <div class="weather-icon-container">
+            {% set main_icon = 'sun.png' %}
+            {% if today.status_icon == 'cloudy_sun' %}{% set main_icon = 'clouds.png' %}
+            {% elif today.status_icon == 'sun' %}{% set main_icon = 'sun.png' %}
+            {% elif today.status_icon == 'rain' %}{% set main_icon = 'heavy_rainy.png' %}
+            {% elif today.status_icon == 'cloudy' %}{% set main_icon = 'clouds.png' %}
+            {% endif %}
+            <img src="/images/{{ main_icon }}" alt="Weather" class="main-weather-img" />
+        </div>
+        
+        <div class="temp-badge">{{ today.temperature }}°C</div>
+        <div class="time-badge">{{ today.date_time }}</div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+        <div class="tabs">
+            <div id="tab-today" class="tab active" onclick="switchTab('today')">Today</div>
+            <div id="tab-week" class="tab" onclick="switchTab('week')">Week</div>
+        </div>
+
+        <!-- TODAY VIEW -->
+        <div id="view-today" class="view active-view">
+            <div class="weather-details">
+                <div class="detail-badge">
+                    <img src="/images/clouds.png" style="width: 22px; height: 22px; object-fit: contain;">
+                    {{ today.condition }}
+                </div>
+                <div class="detail-badge">
+                    <img src="/images/rainy-day.png" style="width: 22px; height: 22px; object-fit: contain;">
+                    Rain {{ today.rain_chance }}%
+                </div>
+            </div>
+            
+            <div class="grid-2x2">
+                <div class="card detail-card">
+                    <img src="/images/humidity.png" class="detail-img-icon" alt="Humidity">
+                    <span class="detail-title">Humidity</span>
+                    <span class="detail-value">{{ today.humidity }}%</span>
+                </div>
+                <div class="card detail-card">
+                    <span class="detail-emoji-icon">💨</span>
+                    <span class="detail-title">Wind Speed</span>
+                    <span class="detail-value">{{ today.wind_speed }} km/h</span>
+                </div>
+                <div class="card detail-card">
+                    <span class="detail-emoji-icon">🍃</span>
+                    <span class="detail-title">Air Quality</span>
+                    <span class="detail-value">{{ today.air_quality }}</span>
+                </div>
+                <div class="card detail-card">
+                    <img src="/images/temperature.png" class="detail-img-icon" alt="Feels Like">
+                    <span class="detail-title">Feels Like</span>
+                    <!-- Simple mock for Feels Like by adding a bit to temperature -->
+                    <span class="detail-value">{{ today.temperature + 1.5 }}°C</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- WEEK VIEW -->
+        <div id="view-week" class="view">
+            <div class="grid-4x2">
+                {% for day in week %}
+                <div class="card week-card">
+                    <div class="week-day">{{ day.day_name }}</div>
+                    <div class="week-date">{{ day.date_text }}</div>
+                    <div class="week-icon">
+                        {% set week_icon = 'sun.png' %}
+                        {% if day.status_icon == 'cloudy_sun' %}{% set week_icon = 'clouds.png' %}
+                        {% elif day.status_icon == 'sun' %}{% set week_icon = 'sun.png' %}
+                        {% elif day.status_icon == 'rain' %}{% set week_icon = 'rainy-day.png' %}
+                        {% elif day.status_icon == 'cloudy' %}{% set week_icon = 'clouds.png' %}
+                        {% endif %}
+                        <img src="/images/{{ week_icon }}" class="week-img-icon" alt="Status" />
+                    </div>
+                    <div class="week-temp">{{ day.temp_min }}°/{{ day.temp_max }}°</div>
+                </div>
+                {% endfor %}
+                <div class="card empty"></div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="padding: 50px; text-align: center; width: 100%;">
+        <h2>Location not found!</h2>
+        <a href="/" style="font-size: 24px; color: #8be3df;">Go Back</a>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function switchTab(tab) {
+        document.getElementById('tab-today').classList.remove('active');
+        document.getElementById('tab-week').classList.remove('active');
+        document.getElementById('view-today').classList.remove('active-view');
+        document.getElementById('view-week').classList.remove('active-view');
+
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('view-' + tab).classList.add('active-view');
+    }
+</script>
+
+</body>
+</html>
